@@ -8,8 +8,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {z} from 'zod';
 import type {Product} from '../shared/products.js';
+import {projectRoot} from './paths.js';
 
-const root = path.resolve(import.meta.dirname, '..');
+const root = projectRoot();
 export const PRODUCTS_PATH = path.join(root, 'data', 'products.json');
 
 const productSchema = z.object({

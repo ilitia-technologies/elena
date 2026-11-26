@@ -7,7 +7,7 @@
  */
 import {A2uiGenerator, CatalogConfig, type RendererCapabilities} from '@a2ui/agent';
 import {Catalog, type ComponentApi, type FunctionApi} from '@a2ui/web_core/catalog';
-import basicCatalogJson from '../shared/a2ui-basic-catalog.v1_0.json';
+import basicCatalogJson from '../shared/a2ui-basic-catalog.v1_0.json' with {type: 'json'};
 import {
   BASIC_COMPONENTS_KEPT,
   CATALOG_ID,

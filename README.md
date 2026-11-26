@@ -38,22 +38,26 @@ Choose one provider and set its values in `.env`:
 | `FOUNDRY_ENDPOINT` | Microsoft Foundry endpoint; setting this selects the Foundry provider. |
 | `FOUNDRY_MODEL_DEPLOYMENT` | Foundry deployment name, used if `A2UI_DEMO_MODEL` is not set. |
 | `FOUNDRY_API_KEY` | Optional Foundry API key. If omitted, the app uses Azure Identity credentials (for example, `az login` locally). |
+| `OPENAI_API_KEY` | OpenAI API key, used when `FOUNDRY_ENDPOINT` is not set. |
+| `OPENAI_BASE_URL` | Optional OpenAI-compatible base URL. |
+| `A2UI_DEMO_MODEL` | Optional model override (default `gpt-6-luna`). |
+| `A2UI_DEMO_EFFORT` | Optional reasoning effort override (default `low`). |
 
 
 ### Optional telemetry
 
-Set `APPLICATIONINSIGHTS_CONNECTION_STRING` to export server and browser telemetry to Azure Monitor / Application Insights. Without it, telemetry is not exported.
+Set `APPLICATIONINSIGHTS_CONNECTION_STRING` to export server and browser telemetry to Azure Monitor / Application Insights. Without it, telemetry is not exported. Set `A2UI_TELEMETRY_QUESTIONS=false` to omit question text from server telemetry, and `OTEL_SERVICE_NAME` to override the service name (default `elena`).
 
 ## Production build
 
-Build the client and type-check the project with:
+`npm run build` bundles the client into `dist/` and compiles the server into `dist-server/`. `npm start` runs the compiled server with plain `node` (`tsx` is only used by `npm run dev`). Build and type-check with:
 
 ```sh
 npm run typecheck
 npm run build
 ```
 
-To serve the production build with `npm start`, set `NODE_ENV=production`. The included [`Dockerfile`](Dockerfile) builds and runs this configuration. Production mode requires Redis-backed query quotas:
+To serve the production build with `npm start` (run `npm run build` first), set `NODE_ENV=production`. The included [`Dockerfile`](Dockerfile) builds and runs this configuration. Production mode requires Redis-backed query quotas:
 
 - `QUOTA_REDIS_URL` — Redis connection URL.
 - `QUOTA_IDENTITY_SECRET` — secret of at least 32 bytes, used to sign browser identities.

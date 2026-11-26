@@ -6,9 +6,9 @@
   "description": "Local demo: appliance-sales assistant whose answers are generative UI (A2UI v1.0) built by gpt-6-luna",
   "scripts": {
     "dev": "node --env-file-if-exists=.env --import tsx --import ./server/telemetry.ts server/index.ts",
-    "start": "tsx --import ./server/telemetry.ts server/index.ts",
+    "start": "node --import ./dist-server/server/telemetry.js dist-server/server/index.js",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "build": "vite build"
+    "build": "vite build && tsc -p tsconfig.server.json"
   },
   "engines": {
     "node": ">=24"

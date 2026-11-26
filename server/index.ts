@@ -1,17 +1,18 @@
 /**
- * Local app: API and web client served by one Node process.
+ * App server: API and web client served by one Node process (Vite middleware in dev, `dist/` in production).
  * The API key stays on the server.
  */
 import express from 'express';
 import {trace} from '@opentelemetry/api';
 import {createServer} from 'node:http';
 import {resolve} from 'node:path';
+import {projectRoot} from './paths.js';
 import {answer, configFromEnv, hasCredentials, parseAskBody, warmUp} from './agent.js';
 import {loadProducts} from './db.js';
 import {BROWSER_COOKIE, browserIdentity, createQuota} from './quota.js';
 
 const PORT = Number(process.env.PORT ?? 8787);
-const DIST_DIR = resolve(import.meta.dirname, '..', 'dist');
+const DIST_DIR = resolve(projectRoot(), 'dist');
 const production = process.env.NODE_ENV === 'production';
 const host = production ? '0.0.0.0' : '127.0.0.1';
 const quotaUrl = process.env.QUOTA_REDIS_URL;

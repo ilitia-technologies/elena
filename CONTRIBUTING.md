@@ -6,7 +6,7 @@ Thanks for your interest in improving ElectroHogar A2UI Demo.
 
 - Use Node.js 24 or later and npm.
 - Install dependencies from the repository root with `npm ci`.
-- Copy `.env.example` to `.env` and configure an API key only if you want to run the app and make live model requests. Never commit `.env` or credentials.
+- Copy `env.example` to `.env` and configure an API key only if you want to run the app and make live model requests. Never commit `.env` or credentials.
 
 ## Making changes
 
@@ -19,11 +19,11 @@ Thanks for your interest in improving ElectroHogar A2UI Demo.
 Before submitting, run:
 
 ```sh
-npm run check
+npm run typecheck
 npm run build
 ```
 
-`npm run check` does not require an API key. Browser checks additionally require Google Chrome and a running app; see the commands in [README.md](README.md#scripts).
+`npm run typecheck` does not require an API key.
 
 ## Pull requests
 

@@ -33,7 +33,7 @@ export interface AgentConfig {
   openaiBaseUrl?: string;
 }
 
-/** Reads the model configuration from the environment (shared by the server and the CLI). */
+/** Reads the model configuration from the environment (used by the server). */
 export function configFromEnv(env: NodeJS.ProcessEnv = process.env): AgentConfig {
   const foundry = Boolean(env.FOUNDRY_ENDPOINT);
   return {
