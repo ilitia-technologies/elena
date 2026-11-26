@@ -125,5 +125,5 @@ if (production) {
 httpServer.listen(PORT, host, () => {
   console.log(`ElectroHogar API on http://${host}:${PORT} · model ${config.model} · ${products.length} products`);
   if (production) console.log('Serving the built web app from dist/');
-  if (!hasCredentials(config)) console.warn('No credentials configured: set OPENAI_API_KEY, or FOUNDRY_ENDPOINT (with Entra ID or FOUNDRY_API_KEY) before asking questions.');
+  if (!hasCredentials(config)) console.warn('No credentials configured: set FOUNDRY_ENDPOINT (with Entra ID or FOUNDRY_API_KEY) before asking questions.');
 });
