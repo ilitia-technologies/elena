@@ -8,7 +8,7 @@
  */
 import {context, metrics, SpanKind, SpanStatusCode, trace, type Attributes, type Span} from '@opentelemetry/api';
 
-const SCOPE = 'electrohogar-a2ui';
+const SCOPE = 'elena';
 export const AGENT_NAME = 'Elena';
 const tracer = trace.getTracer(SCOPE);
 const meter = metrics.getMeter(SCOPE);

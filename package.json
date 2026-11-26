@@ -7,10 +7,11 @@
   "scripts": {
     "dev": "node --env-file-if-exists=.env --import tsx --import ./server/telemetry.ts server/index.ts",
     "start": "tsx --import ./server/telemetry.ts server/index.ts",
-    "e2e": "node scripts/e2e.mjs review/e2e",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "check": "tsc --noEmit -p tsconfig.json && tsx scripts/unit-say.ts && tsx scripts/unit-agent.ts && tsx scripts/unit-quota.ts && node scripts/check-catalog-copy.mjs",
     "build": "vite build"
+  },
+  "engines": {
+    "node": ">=24"
   },
   "dependencies": {
     "@a2ui/agent": "0.1.0",
@@ -28,7 +29,6 @@
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "redis": "6.4.0",
-    "tsx": "4.23.15",
     "zod": "3.25.76"
   },
   "devDependencies": {
@@ -39,9 +39,8 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.3.0",
-    "playwright-core": "1.65.1",
-    "sharp": "0.35.5",
     "typescript": "7.0.2",
+    "tsx": "4.23.15",
     "vite": "8.3.8"
   }
 }

@@ -19,7 +19,7 @@ if (connectionString) {
   const {resourceFromAttributes} = await import('@opentelemetry/resources');
   useAzureMonitor({
     azureMonitorExporterOptions: {connectionString},
-    resource: resourceFromAttributes({'service.name': process.env.OTEL_SERVICE_NAME || 'electrohogar-a2ui'}),
+    resource: resourceFromAttributes({'service.name': process.env.OTEL_SERVICE_NAME || 'elena'}),
     enableLiveMetrics: true,
   });
   console.log('[telemetry] exporting to Azure Monitor');
