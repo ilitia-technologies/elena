@@ -2,6 +2,7 @@
 !package.json
 !package-lock.json
 !tsconfig.json
+!tsconfig.server.json
 !vite.config.ts
 !server/
 !server/**

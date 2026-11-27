@@ -10,7 +10,7 @@ Redis stores the per-browser quota (`server/quota.ts`). It runs as a **Container
 | Replicas | min 1 / max 1 (Redis doesn't scale out; never `minReplicas: 0`) |
 | Resources | 0.25 vCPU, 0.5 Gi |
 | Password | Secret `redis-conf` holding the **whole config file**, mounted as a *Secret* volume at `/mnt/secrets` and started as `redis-server /mnt/secrets/redis-conf` |
-| Persistence | No data volume: data not flushed by Redis is lost when the container restarts (ephemeral) |
+| Persistence | Ephemeral storage only: no durable data volume; quota survival across restarts/revisions is not guaranteed |
 | Probes | None customised (platform defaults) |
 
 Why the config file as a secret: the password never appears in the app's `command`/`args`/env. The secret `redis-conf` is mounted as the file `/mnt/secrets/redis-conf` (secret name = file name).
@@ -32,60 +32,22 @@ REDIS_CONF="requirepass ${REDIS_PASSWORD}"
 
 ## 3. Create the Container App
 
-`az containerapp create` flags can't mount a secret volume or set a TCP `exposedPort`, so a temporary YAML is used (deleted afterwards because it contains the secret).
+Use the CLI's secret-volume and TCP ingress flags directly. No YAML file
+containing credentials is needed. The identity requires the `AcrPull` assignment
+from step 01; allow time for a new assignment to propagate if the pull is denied.
 
 ```bash
-ENV_ID=$(az containerapp env show -g "$RG" -n "$ENV_NAME" --query id -o tsv)
 PULL_ID_RES=$(az identity show -g "$RG" -n "$PULL_ID" --query id -o tsv)
 
-TMP=$(mktemp --suffix=.yaml)
-trap 'rm -f "$TMP"' EXIT
-chmod 600 "$TMP"
-
-cat > "$TMP" <<EOF
-name: ${REDIS_APP}
-location: ${LOC}
-identity:
-  type: UserAssigned
-  userAssignedIdentities:
-    ${PULL_ID_RES}: {}
-properties:
-  environmentId: ${ENV_ID}
-  configuration:
-    activeRevisionsMode: Single
-    ingress:
-      external: false
-      transport: tcp
-      targetPort: 6379
-      exposedPort: 6379
-    registries:
-      - server: ${ACR}.azurecr.io
-        identity: ${PULL_ID_RES}
-    secrets:
-      - name: redis-conf
-        value: |
-$(printf '%s\n' "$REDIS_CONF" | sed 's/^/          /')
-  template:
-    containers:
-      - name: ${REDIS_APP}
-        image: ${ACR}.azurecr.io/redis:8-alpine
-        command: ["redis-server"]
-        args: ["/mnt/secrets/redis-conf"]
-        resources:
-          cpu: 0.25
-          memory: 0.5Gi
-        volumeMounts:
-          - volumeName: secret-volume
-            mountPath: /mnt/secrets
-    volumes:
-      - name: secret-volume
-        storageType: Secret
-    scale:
-      minReplicas: 1
-      maxReplicas: 1
-EOF
-
-az containerapp create -g "$RG" -n "$REDIS_APP" --yaml "$TMP"
+az containerapp create -g "$RG" -n "$REDIS_APP" --environment "$ENV_NAME" \
+  --image "${ACR}.azurecr.io/redis:8-alpine" \
+  --user-assigned "$PULL_ID_RES" \
+  --registry-server "${ACR}.azurecr.io" --registry-identity "$PULL_ID_RES" \
+  --ingress internal --transport tcp --target-port 6379 --exposed-port 6379 \
+  --cpu 0.25 --memory 0.5Gi --min-replicas 1 --max-replicas 1 \
+  --secrets "redis-conf=${REDIS_CONF}" --secret-volume-mount /mnt/secrets \
+  --command redis-server --args /mnt/secrets/redis-conf \
+  --output none
 ```
 
 ## 4. Verify

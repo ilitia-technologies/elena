@@ -25,25 +25,87 @@ ACR_ID=$(az acr show -n "$ACR" --query id -o tsv)
 az role assignment create --assignee-object-id "$PULL_PRINCIPAL" \
   --assignee-principal-type ServicePrincipal --role AcrPull --scope "$ACR_ID"
 
-# Container Apps environment (Consumption profile, logs to Azure Monitor)
+# Connect the environment directly to this workspace.
+# This needs the workspace customer ID, not its ARM resource ID.
+LAW_CUSTOMER_ID=$(az monitor log-analytics workspace show -g "$RG" -n "$LAW" --query customerId -o tsv)
+LAW_KEY=$(az monitor log-analytics workspace get-shared-keys -g "$RG" -n "$LAW" --query primarySharedKey -o tsv)
+
+# Container Apps environment (Consumption profile, logs to Log Analytics)
 az containerapp env create -g "$RG" -n "$ENV_NAME" -l "$LOC" \
-  --logs-destination azure-monitor
+  --enable-workload-profiles true \
+  --logs-destination log-analytics \
+  --logs-workspace-id "$LAW_CUSTOMER_ID" --logs-workspace-key "$LAW_KEY" \
+  --output none
+unset LAW_KEY
 ```
 
-> With `--logs-destination azure-monitor` you must also create a diagnostic setting on the environment that sends to `elena-logs`, otherwise the logs won't show up in Log Analytics:
+Use **direct Log Analytics integration**, not `azure-monitor` without a diagnostic
+setting. The latter was the previous misconfiguration: the workspace existed,
+but the environment had no route to send logs to it. Application Insights uses
+the same workspace independently; configuring it does not connect Container Apps logs.
+
+Verify the environment's destination and workspace ID:
 
 ```bash
-ENV_ID=$(az containerapp env show -g "$RG" -n "$ENV_NAME" --query id -o tsv)
-az monitor diagnostic-settings create --name to-law --resource "$ENV_ID" \
-  --workspace "$LAW_ID" \
-  --logs '[{"category":"ContainerAppConsoleLogs","enabled":true},{"category":"ContainerAppSystemLogs","enabled":true}]'
+az containerapp env show -g "$RG" -n "$ENV_NAME" \
+  --query 'properties.appLogsConfiguration.{destination:destination,workspace:logAnalyticsConfiguration.customerId}' -o json
+test "$(az containerapp env show -g "$RG" -n "$ENV_NAME" \
+  --query properties.appLogsConfiguration.logAnalyticsConfiguration.customerId -o tsv)" = "$LAW_CUSTOMER_ID"
 ```
+
+## Failure-anomaly alert
+
+Do not assume the CLI creates the portal's default smart detector alert.
+Explicitly create it against the new Application Insights resource. Create an
+action group in the same resource group that notifies subscription Owners.
+This intentionally replaces the original external action group, which the
+deploying identity could not access. Existing external resources are untouched.
+
+```bash
+az monitor action-group create -g "$RG" -n "$ALERT_GROUP" --short-name elena \
+  --action armrole subscription-owners 8e3af657-a8ff-443c-a75c-2fe8c4bcb635 \
+  --output none
+ALERT_ACTION_GROUP_ID=$(az monitor action-group show -g "$RG" \
+  -n "$ALERT_GROUP" --query id -o tsv)
+AI_ID=$(az monitor app-insights component show -g "$RG" -a "$AI" --query id -o tsv)
+az rest --method put \
+  --url "https://management.azure.com/subscriptions/${SUB}/resourceGroups/${RG}/providers/Microsoft.AlertsManagement/smartDetectorAlertRules/Failure%20Anomalies%20-%20${AI}?api-version=2021-04-01" \
+  --body "{
+    \"location\": \"global\",
+    \"properties\": {
+    \"description\": \"Failure Anomalies notifies you of an unusual rise in the rate of failed HTTP requests or dependency calls.\",
+    \"state\": \"Enabled\",
+    \"severity\": \"Sev3\",
+    \"frequency\": \"PT1M\",
+    \"scope\": [\"${AI_ID}\"],
+    \"detector\": {\"id\": \"FailureAnomaliesDetector\"},
+    \"actionGroups\": {\"groupIds\": [\"${ALERT_ACTION_GROUP_ID}\"]}
+    }
+  }" --output none
+```
+
+## Verify log ingestion
+
+After deploying the apps and sending a request, confirm **actual ingestion**
+(initial ingestion can take several minutes):
+
+```bash
+az extension add --name log-analytics --allow-preview true --only-show-errors
+az monitor log-analytics query --workspace "$LAW_CUSTOMER_ID" --analytics-query \
+  'union isfuzzy=true ContainerAppConsoleLogs_CL, ContainerAppSystemLogs_CL
+   | where TimeGenerated > ago(1h)
+   | summarize Rows=count(), LastSeen=max(TimeGenerated) by Type, ContainerAppName_s' \
+  -o table
+```
+
+Expect rows for both `elena-pre` and `elena-pre-redis`. A successful environment
+deployment or live log stream alone does not prove workspace ingestion.
 
 ## Human access (optional)
 
 The resource group grants `Contributor` to the team and `Owner` to the administrator:
 
 ```bash
-az role assignment create --assignee <user@domain> --role Contributor \
+az role assignment create --assignee 'user@domain' --role Contributor \
   --scope "/subscriptions/$SUB/resourceGroups/$RG"
 ```

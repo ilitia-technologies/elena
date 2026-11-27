@@ -50,6 +50,8 @@ Set `APPLICATIONINSIGHTS_CONNECTION_STRING` to export server and browser telemet
 
 ## Production build
 
+For the Azure CLI deployment and Redis setup, see [the deployment guide](docs/deploy/README.md).
+
 `npm run build` bundles the client into `dist/` and compiles the server into `dist-server/`. `npm start` runs the compiled server with plain `node` (`tsx` is only used by `npm run dev`). Build and type-check with:
 
 ```sh
