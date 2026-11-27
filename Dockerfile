@@ -1,22 +1,15 @@
-FROM node:24-bookworm-slim AS build
-WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci
-COPY tsconfig.json tsconfig.server.json vite.config.ts ./
-COPY server ./server
-COPY shared ./shared
-COPY web ./web
-COPY data ./data
-RUN npm run build && npm prune --omit=dev
-
-FROM node:24-bookworm-slim
+# Run `npm run build` on the host first: this image only packages dist/, dist-server/ and data/.
+FROM node:24-alpine
 WORKDIR /app
 ENV NODE_ENV=production PORT=8787
-COPY --from=build --chown=node:node /app/package.json /app/package-lock.json ./
-COPY --from=build --chown=node:node /app/node_modules ./node_modules
-COPY --from=build --chown=node:node /app/dist ./dist
-COPY --from=build --chown=node:node /app/dist-server ./dist-server
-COPY --from=build --chown=node:node /app/data ./data
+COPY package.json package-lock.json ./
+# Only express and the telemetry packages stay external to the server bundle; drop the bundled ones.
+RUN npm ci --omit=dev --ignore-scripts \
+ && npm rm --ignore-scripts openai redis zod @a2ui/agent @a2ui/web_core \
+ && npm cache clean --force
+COPY --chown=node:node dist ./dist
+COPY --chown=node:node dist-server ./dist-server
+COPY --chown=node:node data ./data
 USER node
 EXPOSE 8787
-CMD ["npm", "start"]
+CMD ["node", "--import", "./dist-server/telemetry.js", "dist-server/index.js"]

@@ -1,0 +1,15 @@
+# Local production-like stack: run `npm run build` first, then `docker compose up --build`.
+services:
+  redis:
+    image: redis:7-alpine
+  elena:
+    build: .
+    env_file: .env
+    environment:
+      QUOTA_REDIS_URL: redis://redis:6379
+      QUOTA_IDENTITY_SECRET: local-dev-secret-local-dev-secret-0123456789
+      OTEL_SERVICE_NAME: elena-local
+    ports:
+      - "127.0.0.1:8787:8787"
+    depends_on:
+      - redis
