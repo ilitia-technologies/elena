@@ -1,11 +1,11 @@
-# 03 · Redis (`elena-pre-redis`)
+# 03 · Redis (`$REDIS_APP`)
 
-Redis stores the per-browser quota (`server/quota.ts`). It runs as a **Container App** inside the environment, not as Azure Cache for Redis. Key design points of the current deployment:
+Redis stores the per-browser quota (`server/quota.ts`). It runs as a **Container App** inside the environment, not as Azure Cache for Redis. Key design points:
 
 | Aspect | Value |
 | --- | --- |
-| Image | `elenaacr.azurecr.io/redis:8-alpine` (copy of `redis:8-alpine` in our ACR) |
-| Pull | Managed identity `elenaacr-pull` (`AcrPull`), no password |
+| Image | `${ACR}.azurecr.io/redis:8-alpine` (copy of `redis:8-alpine` in your ACR) |
+| Pull | Managed identity `$PULL_ID` (`AcrPull`), no password |
 | Ingress | **Internal**, **TCP** transport, `targetPort` and `exposedPort` 6379 |
 | Replicas | min 1 / max 1 (Redis doesn't scale out; never `minReplicas: 0`) |
 | Resources | 0.25 vCPU, 0.5 Gi |
@@ -28,7 +28,7 @@ REDIS_PASSWORD=$(openssl rand -hex 32)
 REDIS_CONF="requirepass ${REDIS_PASSWORD}"
 ```
 
-> The deployed file contains only `requirepass`. To see the current one: `az containerapp secret show -n elena-pre-redis -g A2UIDemo --secret-name redis-conf` (it prints the password: don't paste it into logs or the repo).
+> The generated file contains only `requirepass`. To inspect it after deployment: `az containerapp secret show -n "$REDIS_APP" -g "$RG" --secret-name redis-conf` (it prints the password: don't paste it into logs or the repo).
 
 ## 3. Create the Container App
 
@@ -62,23 +62,24 @@ You should see `Ready to accept connections tcp`. To test from another app in th
 
 ```bash
 az containerapp exec -g "$RG" -n "$APP" --command "sh"
-# inside: use a redis client against host elena-pre-redis, port 6379
+# Inside: use a Redis client against the Redis app name you chose, port 6379.
 ```
 
 ## 5. URL for the app
 
-Inside the environment the service is reachable by the app name (or the internal FQDN `elena-pre-redis.internal.<environment-domain>`):
+Inside the environment the service is reachable by `$REDIS_APP` (or its internal
+FQDN, returned by the verification command above):
 
 ```bash
 export QUOTA_REDIS_URL="redis://:${REDIS_PASSWORD}@${REDIS_APP}:6379"
 ```
 
-It is injected into `elena-pre` as the secret `quota-redis-url` ([04-app.md](04-app.md)). If the password had special characters you would need to URL-encode it (not needed with `openssl rand -hex`).
+It is injected into `$APP` as the secret `quota-redis-url` ([04-app.md](04-app.md)). If the password had special characters you would need to URL-encode it (not needed with `openssl rand -hex`).
 
 ## Notes and pitfalls
 
 - **Internal TCP ≠ HTTP**: ingress must be `transport: tcp`; with `auto`/`http` Redis won't respond. `exposedPort` is only valid with TCP.
 - Reachable only from apps in the **same environment** (`external: false`); no Internet access.
-- Rotating the password: update the `redis-conf` secret (`az containerapp secret set`), create a new Redis revision, and update `quota-redis-url` in `elena-pre`.
+- Rotating the password: update the `redis-conf` secret (`az containerapp secret set`), create a new Redis revision, and update `quota-redis-url` in `$APP`.
 - No persistence: fine for quotas (they reset), not for data that must be kept.
 - Changes to a secret mounted as a volume need a new revision/restart to take effect.

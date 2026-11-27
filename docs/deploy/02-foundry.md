@@ -18,11 +18,11 @@ else
     --allow-project-management true --yes --output none
 fi
 
-# Model deployment (GlobalStandard, capacity 50)
+# Deploy the model with the SKU and capacity you selected.
 az cognitiveservices account deployment create -g "$RG" -n "$FOUNDRY" \
-  --deployment-name gpt-6-luna \
-  --model-name gpt-6-luna --model-version 2026-09-22 --model-format OpenAI \
-  --sku-name GlobalStandard --sku-capacity 50
+  --deployment-name "$MODEL_DEPLOYMENT" \
+  --model-name "$MODEL_NAME" --model-version "$MODEL_VERSION" --model-format OpenAI \
+  --sku-name "$MODEL_SKU" --sku-capacity "$MODEL_CAPACITY"
 ```
 
 For a fresh account, leave `FOUNDRY_RECOVER` unset. After the documented reset,
@@ -31,7 +31,7 @@ its model deployment is recreated. This is **not** a fresh account creation.
 A full purge requires subscription-level permissions, even for a resource-group
 Owner, and may prevent immediate reuse of the name.
 
-Resulting endpoint: `https://elena-foundry.cognitiveservices.azure.com/`.
+Read the endpoint from the account rather than hardcoding its hostname.
 
 Key and Application Insights connection string (used in [04-app.md](04-app.md)):
 
@@ -41,4 +41,4 @@ export FOUNDRY_API_KEY=$(az cognitiveservices account keys list -g "$RG" -n "$FO
 export AI_CONN=$(az monitor app-insights component show -g "$RG" -a "$AI" --query connectionString -o tsv)
 ```
 
-> The app also supports Entra ID (`DefaultAzureCredential`) when `FOUNDRY_API_KEY` is not set; the current deployment uses a key.
+> These scripts use a key. The app also supports Entra ID (`DefaultAzureCredential`) when `FOUNDRY_API_KEY` is not set.

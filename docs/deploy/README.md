@@ -1,24 +1,23 @@
 # Deploying Elena on Azure
 
-Manual guide (Azure CLI + bash) for the resources in resource group `A2UIDemo`. No azd, no Bicep.
+Manual guide (Azure CLI + bash) for deploying into your own resource group. No azd, no Bicep.
 
 | Resource | Type | Doc |
 | --- | --- | --- |
-| `elena-logs` | Log Analytics workspace | [01-platform.md](01-platform.md) |
-| `elena-monitor` | Application Insights (workspace-based) | [01-platform.md](01-platform.md) |
-| `Failure Anomalies - elena-monitor` | Smart detector alert rule | [01-platform.md](01-platform.md) |
-| `elena-alerts` | Action group (notifies subscription Owners) | [01-platform.md](01-platform.md) |
-| `elenaacr` | Container Registry (Standard) | [01-platform.md](01-platform.md) |
-| `elenaacr-pull` | User-assigned managed identity (`AcrPull`) | [01-platform.md](01-platform.md) |
-| `elena-apps` | Container Apps environment (Consumption) | [01-platform.md](01-platform.md) |
-| `elena-foundry` | Foundry / AIServices + `gpt-6-luna` deployment | [02-foundry.md](02-foundry.md) |
-| `elena-pre-redis` | Container App (Redis, internal TCP) | [03-redis.md](03-redis.md) |
-| `elena-pre` | Container App (web + API) | [04-app.md](04-app.md) |
+| `$LAW` | Log Analytics workspace | [01-platform.md](01-platform.md) |
+| `$AI` | Application Insights (workspace-based) | [01-platform.md](01-platform.md) |
+| `Failure Anomalies - ${AI}` | Smart detector alert rule | [01-platform.md](01-platform.md) |
+| `$ALERT_GROUP` | Action group (notifies subscription Owners) | [01-platform.md](01-platform.md) |
+| `$ACR` | Container Registry (Standard) | [01-platform.md](01-platform.md) |
+| `$PULL_ID` | User-assigned managed identity (`AcrPull`) | [01-platform.md](01-platform.md) |
+| `$ENV_NAME` | Container Apps environment (Consumption) | [01-platform.md](01-platform.md) |
+| `$FOUNDRY` | Foundry / AIServices + `$MODEL_DEPLOYMENT` deployment | [02-foundry.md](02-foundry.md) |
+| `$REDIS_APP` | Container App (Redis, internal TCP) | [03-redis.md](03-redis.md) |
+| `$APP` | Container App (web + API) | [04-app.md](04-app.md) |
 | local `.env` | Local development settings | [05-local-env.md](05-local-env.md) |
 
-The smart detector alert uses `elena-alerts` in this resource group. This replaces
-the previous cross-resource-group action-group reference, which was inaccessible
-to the deploying identity. No external action group is modified.
+The smart detector alert uses `$ALERT_GROUP` in the same resource group.
+No external action group is required or modified.
 
 ## Order
 
@@ -29,21 +28,31 @@ For an intentionally destructive clean-room test, first follow
 
 ## Common variables
 
-All scripts assume these variables (paste them into the same shell, or keep them in a `deploy.env` **outside git**):
+Replace every `<...>` placeholder with your own value before running any commands.
+All scripts assume these variables (paste them into the same shell, or keep them
+in a `deploy.env` **outside git**). Choose a model, version, deployment SKU and
+capacity available in your subscription and region.
 
 ```bash
-export SUB=28508e6b-28ed-456c-a003-e4af5e5209dc
-export RG=A2UIDemo
-export LOC=spaincentral
-export ACR=elenaacr
-export ENV_NAME=elena-apps
-export PULL_ID=elenaacr-pull
-export LAW=elena-logs
-export AI=elena-monitor
-export FOUNDRY=elena-foundry
-export REDIS_APP=elena-pre-redis
-export APP=elena-pre
-export ALERT_GROUP=elena-alerts
+export SUB='<subscription-id>'
+export RG='<resource-group-name>'
+export LOC='<azure-region>'
+export ACR='<globally-unique-registry-name>'
+export ENV_NAME='<container-apps-environment-name>'
+export PULL_ID='<registry-pull-identity-name>'
+export LAW='<log-analytics-workspace-name>'
+export AI='<application-insights-name>'
+export FOUNDRY='<globally-unique-foundry-account-name>'
+export REDIS_APP='<redis-container-app-name>'
+export APP='<web-container-app-name>'
+export ALERT_GROUP='<action-group-name>'
+export ALERT_SHORT_NAME='<action-group-short-name>'
+export MODEL_DEPLOYMENT='<model-deployment-name>'
+export MODEL_NAME='<model-name>'
+export MODEL_VERSION='<model-version>'
+export MODEL_SKU='<model-deployment-sku>'
+export MODEL_CAPACITY='<model-deployment-capacity>'
+export IMAGE_REPOSITORY='<application-image-repository>'
 
 az account show --output none || az login --output none
 az account set --subscription "$SUB"
@@ -68,20 +77,14 @@ Run the commands in Bash with `set -euo pipefail` and `umask 077`. Do not enable
 shell tracing (`set -x`), which would print credentials. Resource names such as
 the registry name and Foundry subdomain must be globally unique.
 
-## Rebuild verification
+## Verification checklist
 
-The reset/rebuild path was exercised against `A2UIDemo` on 2026-11-27 using
-these Bash blocks. The resource group and its access assignments were retained.
-The deployment now contains ten resources, including the new local action group.
-
-- Redis was created from scratch with the native CLI flags, its config secret
-  mounted as a file, internal TCP ingress, and exactly one replica.
-- A production question passed the Redis quota check and returned a model-built
-  UI with `fallback: false`.
-- **Both console and system logs for both Container Apps were queried from
-  `elena-logs`**, not just from the live log stream.
-- The local `.env` generation authenticated against Foundry with a rotated key.
-
-Foundry was soft-deleted and **recovered**, with both keys rotated and the model
-deployment recreated, because subscription-level purge was denied. The fresh
-account creation branch in step 02 was not exercised by this rebuild.
+- Verify Redis has its config secret mounted as a file, internal TCP ingress,
+  and exactly one replica.
+- Send a production question and check that it passes the Redis quota check and
+  returns a model-built UI with `fallback: false`.
+- Query **both console and system logs for both Container Apps from `$LAW`**,
+  not just from the live log stream.
+- Generate the local `.env` and verify Foundry authentication.
+- Distinguish a fresh Foundry account creation from the soft-delete/recovery
+  path; validating one does not validate the other.

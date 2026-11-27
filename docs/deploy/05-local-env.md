@@ -12,7 +12,7 @@ FOUNDRY_API_KEY=$(az cognitiveservices account keys list -g "$RG" -n "$FOUNDRY" 
 umask 077
 cat > .env <<EOF
 FOUNDRY_ENDPOINT=${FOUNDRY_ENDPOINT}
-FOUNDRY_MODEL_DEPLOYMENT=gpt-6-luna
+FOUNDRY_MODEL_DEPLOYMENT=${MODEL_DEPLOYMENT}
 FOUNDRY_API_KEY=${FOUNDRY_API_KEY}
 EOF
 
@@ -31,5 +31,5 @@ Notes:
 - The quota (`QUOTA_REDIS_URL`, `QUOTA_IDENTITY_SECRET`) is only enforced when `NODE_ENV=production`, so it isn't needed locally. Redis is internal to the Container Apps environment and not reachable from your machine anyway.
 - Telemetry is optional: to send it to Application Insights, append  
   `echo "APPLICATIONINSIGHTS_CONNECTION_STRING=$(az monitor app-insights component show -g "$RG" -a "$AI" --query connectionString -o tsv)" >> .env`
-- Keyless alternative: omit `FOUNDRY_API_KEY`; the app then uses `DefaultAzureCredential` (`az login`), which needs the `Cognitive Services OpenAI User` role on `elena-foundry`.
+- Keyless alternative: omit `FOUNDRY_API_KEY`; the app then uses `DefaultAzureCredential` (`az login`), which needs the `Cognitive Services OpenAI User` role on `$FOUNDRY`.
 - Never commit `.env`.

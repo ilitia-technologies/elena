@@ -34,7 +34,7 @@ az acr delete -g "$RG" -n "$ACR" --yes
 az identity delete -g "$RG" -n "$PULL_ID"
 az resource delete --ids \
   "/subscriptions/$SUB/resourceGroups/$RG/providers/microsoft.alertsmanagement/smartDetectorAlertRules/Failure Anomalies - ${AI}"
-# Only present after deploying the new, self-contained alert configuration.
+# Remove the action group if it exists.
 if az monitor action-group list -g "$RG" --query '[].name' -o tsv | grep -Fxq "$ALERT_GROUP"; then
   az monitor action-group delete -g "$RG" -n "$ALERT_GROUP"
 fi
@@ -52,7 +52,7 @@ inspect the failure and resume from the failed command instead.
 
 The Foundry account remains soft-deleted until step 02. Resource-group Owner
 does not grant permission to purge it at subscription scope. Recovering it is
-the tested path here; it does not validate fresh account creation. A subscription
+an alternative to purging; it does not validate fresh account creation. A subscription
 administrator can instead purge it before deploying with `FOUNDRY_RECOVER=false`:
 
 ```bash

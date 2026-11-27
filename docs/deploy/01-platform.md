@@ -15,7 +15,7 @@ LAW_ID=$(az monitor log-analytics workspace show -g "$RG" -n "$LAW" --query id -
 az monitor app-insights component create -g "$RG" -a "$AI" -l "$LOC" \
   --kind web --application-type web --workspace "$LAW_ID"
 
-# Container Registry (Standard, admin enabled: elena-pre uses it to pull)
+# Container Registry (Standard, admin enabled for the web app to pull)
 az acr create -g "$RG" -n "$ACR" -l "$LOC" --sku Standard --admin-enabled true
 
 # Managed identity so Redis can pull without a password
@@ -40,8 +40,8 @@ unset LAW_KEY
 ```
 
 Use **direct Log Analytics integration**, not `azure-monitor` without a diagnostic
-setting. The latter was the previous misconfiguration: the workspace existed,
-but the environment had no route to send logs to it. Application Insights uses
+setting. Otherwise, a workspace can exist without the environment having a route
+to send logs to it. Application Insights uses
 the same workspace independently; configuring it does not connect Container Apps logs.
 
 Verify the environment's destination and workspace ID:
@@ -58,11 +58,12 @@ test "$(az containerapp env show -g "$RG" -n "$ENV_NAME" \
 Do not assume the CLI creates the portal's default smart detector alert.
 Explicitly create it against the new Application Insights resource. Create an
 action group in the same resource group that notifies subscription Owners.
-This intentionally replaces the original external action group, which the
-deploying identity could not access. Existing external resources are untouched.
+Keeping the action group local avoids a dependency on permissions to external
+resource groups.
 
 ```bash
-az monitor action-group create -g "$RG" -n "$ALERT_GROUP" --short-name elena \
+# The GUID below is Azure's built-in Owner role ID, not a subscription-specific ID.
+az monitor action-group create -g "$RG" -n "$ALERT_GROUP" --short-name "$ALERT_SHORT_NAME" \
   --action armrole subscription-owners 8e3af657-a8ff-443c-a75c-2fe8c4bcb635 \
   --output none
 ALERT_ACTION_GROUP_ID=$(az monitor action-group show -g "$RG" \
@@ -98,12 +99,12 @@ az monitor log-analytics query --workspace "$LAW_CUSTOMER_ID" --analytics-query 
   -o table
 ```
 
-Expect rows for both `elena-pre` and `elena-pre-redis`. A successful environment
+Expect rows for both `$APP` and `$REDIS_APP`. A successful environment
 deployment or live log stream alone does not prove workspace ingestion.
 
 ## Human access (optional)
 
-The resource group grants `Contributor` to the team and `Owner` to the administrator:
+If needed, grant team members `Contributor` on the resource group:
 
 ```bash
 az role assignment create --assignee 'user@domain' --role Contributor \

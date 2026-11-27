@@ -1,14 +1,14 @@
-# 04 · Application (`elena-pre`)
+# 04 · Application (`$APP`)
 
 Requires steps 01–03 and the exported `FOUNDRY_ENDPOINT`, `FOUNDRY_API_KEY`, `AI_CONN` and `QUOTA_REDIS_URL`.
 
 ## 1. Build and push the image
 
-From the repo root (uses the `Dockerfile`); the current tag is `003`:
+From the repo root (uses the `Dockerfile`); choose a unique version tag:
 
 ```bash
-TAG=003
-az acr build -r "$ACR" -t "elena:${TAG}" .
+TAG=v1
+az acr build -r "$ACR" -t "${IMAGE_REPOSITORY}:${TAG}" .
 ```
 
 ## 2. Create the Container App
@@ -18,18 +18,18 @@ ACR_PASS=$(az acr credential show -n "$ACR" --query "passwords[0].value" -o tsv)
 QUOTA_IDENTITY_SECRET=$(openssl rand -hex 32)   # ≥ 32 bytes; changing it invalidates existing browser identities
 
 az containerapp create -g "$RG" -n "$APP" --environment "$ENV_NAME" \
-  --image "${ACR}.azurecr.io/elena:${TAG}" \
+  --image "${ACR}.azurecr.io/${IMAGE_REPOSITORY}:${TAG}" \
   --registry-server "${ACR}.azurecr.io" --registry-username "$ACR" --registry-password "$ACR_PASS" \
   --ingress external --target-port 8787 --transport auto \
   --cpu 0.5 --memory 1Gi \
   --min-replicas 0 --max-replicas 10 \
   --scale-rule-name http-scaler --scale-rule-type http --scale-rule-http-concurrency 10 \
-  --revision-suffix "elena-pre-${TAG#0}" \
+  --revision-suffix "$TAG" \
   --secrets "quota-redis-url=${QUOTA_REDIS_URL}" "quota-identity-secret=${QUOTA_IDENTITY_SECRET}" \
     "foundry-api-key=${FOUNDRY_API_KEY}" \
   --env-vars \
     FOUNDRY_ENDPOINT="$FOUNDRY_ENDPOINT" \
-    FOUNDRY_MODEL_DEPLOYMENT=gpt-6-luna \
+    FOUNDRY_MODEL_DEPLOYMENT="$MODEL_DEPLOYMENT" \
     FOUNDRY_API_KEY=secretref:foundry-api-key \
     APPLICATIONINSIGHTS_CONNECTION_STRING="$AI_CONN" \
     QUOTA_REDIS_URL=secretref:quota-redis-url \
@@ -45,10 +45,10 @@ Notes:
 ## 3. Ship a new version
 
 ```bash
-TAG=004
-az acr build -r "$ACR" -t "elena:${TAG}" .
+TAG=v2
+az acr build -r "$ACR" -t "${IMAGE_REPOSITORY}:${TAG}" .
 az containerapp update -g "$RG" -n "$APP" \
-  --image "${ACR}.azurecr.io/elena:${TAG}" --revision-suffix "elena-pre-${TAG#0}"
+  --image "${ACR}.azurecr.io/${IMAGE_REPOSITORY}:${TAG}" --revision-suffix "$TAG"
 ```
 
 ## 4. Verify
