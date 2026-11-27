@@ -6,33 +6,31 @@
   "description": "Local demo: appliance-sales assistant whose answers are generative UI (A2UI v1.0) built by gpt-6-luna",
   "scripts": {
     "dev": "node --env-file-if-exists=.env --import tsx --import ./server/telemetry.ts server/index.ts",
-    "start": "node --import ./dist-server/server/telemetry.js dist-server/server/index.js",
+    "start": "node --import ./dist-server/telemetry.js dist-server/index.js",
     "test": "node --import tsx --test tests/*.test.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "build": "vite build && tsc -p tsconfig.server.json"
+    "build": "vite build && npm run build:server",
+    "build:server": "esbuild server/index.ts server/telemetry.ts --bundle --platform=node --format=esm --target=node24 --outdir=dist-server --banner:js=\"import{createRequire}from'node:module';const require=createRequire(import.meta.url);\" --external:express --external:vite --external:@azure/* --external:@opentelemetry/*"
   },
   "engines": {
     "node": ">=24"
   },
   "dependencies": {
     "@a2ui/agent": "0.1.0",
-    "@a2ui/react": "0.15.0",
     "@a2ui/web_core": "0.15.0",
     "@azure/identity": "4.14.1",
     "@azure/monitor-opentelemetry": "1.21.0",
-    "@microsoft/applicationinsights-web": "3.4.6",
     "@opentelemetry/api": "1.9.1",
     "@opentelemetry/instrumentation": "0.221.0",
     "@opentelemetry/resources": "2.12.1",
     "express": "5.3.0",
-    "markdown-it": "14.3.3",
     "openai": "7.57.0",
-    "react": "19.3.1",
-    "react-dom": "19.3.1",
     "redis": "6.4.0",
     "zod": "3.25.76"
   },
   "devDependencies": {
+    "@a2ui/react": "0.15.0",
+    "@microsoft/applicationinsights-web": "3.4.6",
     "@opentelemetry/sdk-trace-base": "2.12.1",
     "@types/express": "5.0.6",
     "@types/markdown-it": "14.2.0",
@@ -40,8 +38,12 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.3.0",
-    "typescript": "7.0.2",
+    "esbuild": "0.28.2",
+    "markdown-it": "14.3.3",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "tsx": "4.23.15",
+    "typescript": "7.0.2",
     "vite": "8.3.8"
   }
 }

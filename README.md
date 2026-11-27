@@ -49,7 +49,7 @@ Set `APPLICATIONINSIGHTS_CONNECTION_STRING` to export server and browser telemet
 
 For the Azure CLI deployment and Redis setup, see [the deployment guide](docs/deploy/README.md).
 
-`npm run build` bundles the client into `dist/` and compiles the server into `dist-server/`. `npm start` runs the compiled server with plain `node` (`tsx` is only used by `npm run dev`). Build and type-check with:
+`npm run build` (run it on the host before `docker build`) bundles the client into `dist/` and bundles the server (esbuild) into `dist-server/`. `npm start` runs the compiled server with plain `node` (`tsx` is only used by `npm run dev`). Build and type-check with:
 
 ```sh
 npm test
@@ -63,6 +63,18 @@ To serve the production build with `npm start` (run `npm run build` first), set 
 - `QUOTA_IDENTITY_SECRET` — secret of at least 32 bytes, used to sign browser identities.
 
 Production requests are limited to 10 model questions per browser per hour. These quota settings are not required for local development.
+
+### Run the production setup with Docker Compose
+
+[`compose.yaml`](compose.yaml) runs the production image together with Redis. It reads the model and telemetry settings from `.env` (see [Model configuration](#model-configuration)) and sets `QUOTA_REDIS_URL` and a local `QUOTA_IDENTITY_SECRET` itself.
+
+```sh
+npm ci
+npm run build          # the image only packages dist/, dist-server/ and data/
+docker compose up --build
+```
+
+Open http://localhost:8787. Stop it with `docker compose down`. Rerun `npm run build` before `docker compose up --build` after any code change. The browser identity cookie is `Secure`, which browsers accept on `localhost` but `curl` does not send back automatically.
 
 ## Project layout
 

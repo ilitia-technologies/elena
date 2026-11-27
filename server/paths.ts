@@ -1,7 +1,7 @@
 import {existsSync} from 'node:fs';
 import {dirname, join} from 'node:path';
 
-/** Project root (the folder with package.json), from both `server/` (tsx) and `dist-server/server/` (built). */
+/** Project root (the folder with package.json), from both `server/` (tsx) and `dist-server/` (bundled). */
 export function projectRoot(): string {
   let dir = import.meta.dirname;
   while (!existsSync(join(dir, 'package.json'))) {
