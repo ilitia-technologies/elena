@@ -3,8 +3,7 @@
  * an `invoke_agent` span per question with one `chat` child span per model call, the
  * `gen_ai.client.token.usage` and `gen_ai.client.operation.duration` histograms, and an answer
  * counter by outcome. In Application Insights the spans land in `dependencies` and the metrics in
- * `customMetrics`; the question text (`a2ui.question`) is recorded unless
- * A2UI_TELEMETRY_QUESTIONS=false.
+ * `customMetrics`; the question text is recorded as `a2ui.question`.
  */
 import {context, metrics, SpanKind, SpanStatusCode, trace, type Attributes, type Span} from '@opentelemetry/api';
 
@@ -47,8 +46,6 @@ const baseAttributes = (t: ModelTarget, operation: string): Attributes => ({
   'gen_ai.provider.name': providerName(t),
   'gen_ai.request.model': t.model,
 });
-const captureQuestions = () => process.env.A2UI_TELEMETRY_QUESTIONS !== 'false';
-
 export interface AgentSpan {
   span: Span;
   target: ModelTarget;
@@ -63,7 +60,7 @@ export function startAgentSpan(target: ModelTarget, question: string, surfaceId:
       'gen_ai.agent.name': AGENT_NAME,
       'a2ui.surface_id': surfaceId,
       'a2ui.history_turns': historyTurns,
-      ...(captureQuestions() ? {'a2ui.question': question} : {}),
+      'a2ui.question': question,
     },
   });
   return {span, target, start: performance.now()};

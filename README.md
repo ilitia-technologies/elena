@@ -36,17 +36,14 @@ Choose one provider and set its values in `.env`:
 | Variable | Purpose |
 | --- | --- |
 | `FOUNDRY_ENDPOINT` | Microsoft Foundry endpoint; setting this selects the Foundry provider. |
-| `FOUNDRY_MODEL_DEPLOYMENT` | Foundry deployment name, used if `A2UI_DEMO_MODEL` is not set. |
+| `FOUNDRY_MODEL_DEPLOYMENT` | Foundry deployment name; defaults to `gpt-6-luna` if unset. |
 | `FOUNDRY_API_KEY` | Optional Foundry API key. If omitted, the app uses Azure Identity credentials (for example, `az login` locally). |
 | `OPENAI_API_KEY` | OpenAI API key, used when `FOUNDRY_ENDPOINT` is not set. |
 | `OPENAI_BASE_URL` | Optional OpenAI-compatible base URL. |
-| `A2UI_DEMO_MODEL` | Optional model override (default `gpt-6-luna`). |
-| `A2UI_DEMO_EFFORT` | Optional reasoning effort override (default `low`). |
-
 
 ### Optional telemetry
 
-Set `APPLICATIONINSIGHTS_CONNECTION_STRING` to export server and browser telemetry to Azure Monitor / Application Insights. Without it, telemetry is not exported. Set `A2UI_TELEMETRY_QUESTIONS=false` to omit question text from server telemetry, and `OTEL_SERVICE_NAME` to override the service name (default `elena`).
+Set `APPLICATIONINSIGHTS_CONNECTION_STRING` to export server and browser telemetry to Azure Monitor / Application Insights. Without it, telemetry is not exported. `OTEL_SERVICE_NAME` overrides the service name (default `elena`).
 
 ## Production build
 

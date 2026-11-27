@@ -64,13 +64,12 @@ test('configFromEnv selects Foundry settings and credentials correctly', () => {
   const config = configFromEnv({
     FOUNDRY_ENDPOINT: 'https://foundry.example/',
     FOUNDRY_MODEL_DEPLOYMENT: 'deployment',
-    A2UI_DEMO_EFFORT: 'high',
   });
 
   assert.equal(config.provider, 'foundry');
   assert.equal(config.foundryEndpoint, 'https://foundry.example/');
   assert.equal(config.model, 'deployment');
-  assert.equal(config.effort, 'high');
+  assert.equal(config.effort, 'low');
   assert.equal(hasCredentials(config), true);
   assert.equal(hasCredentials({...config, provider: 'openai'}), false);
   assert.equal(hasCredentials({...config, provider: 'openai', apiKey: 'key'}), true);

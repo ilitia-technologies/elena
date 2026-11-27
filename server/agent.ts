@@ -41,8 +41,8 @@ export function configFromEnv(env: NodeJS.ProcessEnv = process.env): AgentConfig
     provider: foundry ? 'foundry' : 'openai',
     foundryEndpoint: env.FOUNDRY_ENDPOINT,
     openaiBaseUrl: env.OPENAI_BASE_URL,
-    model: env.A2UI_DEMO_MODEL || (foundry ? env.FOUNDRY_MODEL_DEPLOYMENT : undefined) || DEFAULT_MODEL,
-    effort: (env.A2UI_DEMO_EFFORT as AgentConfig['effort']) || 'low',
+    model: (foundry ? env.FOUNDRY_MODEL_DEPLOYMENT : undefined) || DEFAULT_MODEL,
+    effort: 'low',
   };
 }
 

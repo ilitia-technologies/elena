@@ -34,4 +34,4 @@ Data: `data/products.json` is loaded and zod-validated by `server/db.ts` (which 
 - Stateless server: conversation history is sent by the client on each request and sanitized (`sanitizeHistory`, limited by `HISTORY_TURNS` / `HISTORY_CHARS`).
 - Server/shared code imports local modules with `.js` extensions (`'./agent.js'`); web code imports without extensions.
 - Telemetry (`server/telemetry.ts`, `server/genai-telemetry.ts`, `web/src/telemetry.ts`) is optional and only active with `APPLICATIONINSIGHTS_CONNECTION_STRING`; `server/telemetry.ts` is preloaded via `--import` in the `dev`/`start` scripts.
-- Model config env vars: `FOUNDRY_ENDPOINT`/`FOUNDRY_MODEL_DEPLOYMENT`/`FOUNDRY_API_KEY`, or `OPENAI_API_KEY`/`OPENAI_BASE_URL`; override with `A2UI_DEMO_MODEL`, `A2UI_DEMO_EFFORT` (default model `gpt-6-luna`, effort `low`).
+- Model config env vars: `FOUNDRY_ENDPOINT`/`FOUNDRY_MODEL_DEPLOYMENT`/`FOUNDRY_API_KEY`, or `OPENAI_API_KEY`/`OPENAI_BASE_URL` (default model `gpt-6-luna`, effort `low`).
