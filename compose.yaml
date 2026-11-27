@@ -10,6 +10,6 @@ services:
       QUOTA_IDENTITY_SECRET: local-dev-secret-local-dev-secret-0123456789
       OTEL_SERVICE_NAME: elena-local
     ports:
-      - "8787:8787"
+      - "127.0.0.1:8787:8787"
     depends_on:
       - redis
