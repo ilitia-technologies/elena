@@ -53,6 +53,7 @@ Set `APPLICATIONINSIGHTS_CONNECTION_STRING` to export server and browser telemet
 `npm run build` bundles the client into `dist/` and compiles the server into `dist-server/`. `npm start` runs the compiled server with plain `node` (`tsx` is only used by `npm run dev`). Build and type-check with:
 
 ```sh
+npm test
 npm run typecheck
 npm run build
 ```
@@ -74,6 +75,7 @@ Production requests are limited to 10 model questions per browser per hour. Thes
 ## Checks
 
 ```sh
+npm test
 npm run typecheck
 npm run build
 ```

@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "node --env-file-if-exists=.env --import tsx --import ./server/telemetry.ts server/index.ts",
     "start": "node --import ./dist-server/server/telemetry.js dist-server/server/index.js",
+    "test": "node --import tsx --test tests/*.test.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "build": "vite build && tsc -p tsconfig.server.json"
   },

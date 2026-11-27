@@ -19,11 +19,12 @@ Thanks for your interest in improving ElectroHogar A2UI Demo.
 Before submitting, run:
 
 ```sh
+npm test
 npm run typecheck
 npm run build
 ```
 
-`npm run typecheck` does not require an API key.
+`npm test` uses Node's built-in test runner and does not require an API key. Type-checking also does not require an API key.
 
 ## Pull requests
 
