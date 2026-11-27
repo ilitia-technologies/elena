@@ -7,9 +7,9 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts \
  && npm rm --ignore-scripts openai redis zod @a2ui/agent @a2ui/web_core \
  && npm cache clean --force
-COPY dist ./dist
-COPY dist-server ./dist-server
-COPY data ./data
+COPY --chown=node:node dist ./dist
+COPY --chown=node:node dist-server ./dist-server
+COPY --chown=node:node data ./data
 USER node
 EXPOSE 8787
 CMD ["node", "--import", "./dist-server/telemetry.js", "dist-server/index.js"]
