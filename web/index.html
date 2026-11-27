@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="es" data-theme="light" data-style="indigo">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ElectroHogar · Asesora IA</title>
+    <script>
+      // Apply the saved appearance before the first paint, so a dark or restyled page never flashes.
+      // Keep the keys, values and defaults in sync with src/theme.ts.
+      (function () {
+        var theme = 'system';
+        var style = 'indigo';
+        try {
+          theme = localStorage.getItem('eh-theme') || theme;
+          style = localStorage.getItem('eh-style') || style;
+        } catch (e) {}
+        if (['light', 'dark', 'system'].indexOf(theme) < 0) theme = 'system';
+        if (['indigo', 'mono', 'turquesa', 'tienda'].indexOf(style) < 0) style = 'indigo';
+        var dark = theme === 'dark' || (theme === 'system' && !!window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-style', style);
+      })();
+    </script>
+    <meta name="theme-color" content="#f6f7fb" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- One family per style; the browser only downloads the faces the page actually uses. -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400..800&family=Inter:wght@400..800&family=Montserrat:wght@400..800&family=Plus+Jakarta+Sans:wght@400..800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%234f46e5'/><path d='M9 22V10h10M9 16h8M9 22h10' stroke='%23ffffff' stroke-width='3' fill='none' stroke-linecap='round'/></svg>" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
